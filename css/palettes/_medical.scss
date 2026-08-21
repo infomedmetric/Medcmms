@@ -1,0 +1,52 @@
+/*!
+ * ---------------------------------------------------------------------
+ *
+ * GLPI - Gestionnaire Libre de Parc Informatique
+ *
+ * http://glpi-project.org
+ *
+ * @copyright 2015-2026 Teclib' and contributors.
+ * @licence   https://www.gnu.org/licenses/gpl-3.0.html
+ *
+ * ---------------------------------------------------------------------
+ *
+ * "medical" palette — custom CMMS theme for medical equipment
+ * maintenance management (teal / clinical colors + CMMS branding).
+ * Overrides the default palette variables for `data-glpi-theme="medical"`.
+ *
+ * ---------------------------------------------------------------------
+ */
+
+:root[data-glpi-theme="medical"] {
+    // Primary action color (teal-600)
+    --tblr-primary-rgb: 13, 148, 136;
+    --tblr-primary-fg: #ffffff;
+    --tblr-secondary: #64748b;
+    --tblr-secondary-fg: #ffffff;
+    --tblr-link-color-rgb: 13, 148, 136;
+    --tblr-link-color: rgb(var(--tblr-link-color-rgb));
+
+    // Main menu (dark teal-700)
+    --glpi-mainmenu-bg: #0f766e;
+    --glpi-mainmenu-fg: #f0fdfa;
+    --glpi-mainmenu-fg-muted: #f0fdfa99;
+    --glpi-mainmenu-active-bg: #115e59;
+
+    // Helpdesk header / illustrations
+    --glpi-helpdesk-header: hsl(173deg, 90%, 88%);
+    --glpi-illustrations-gradient-1: hsl(173deg, 90%, 93%);
+    --glpi-illustrations-gradient-2: hsl(173deg, 70%, 72%);
+    --glpi-illustrations-gradient-3: hsl(173deg, 55%, 42%);
+
+    // Dashboard palette
+    --glpi-palette-color-1: #99f6e4;
+    --glpi-palette-color-2: #0f766e;
+    --glpi-palette-color-3: #2dd4bf;
+    --glpi-palette-color-4: #14b8a6;
+
+    // CMMS branding: replace GLPI wordmarks with MedEquip logos
+    --glpi-logo-light: url("../pics/logos/medequip-icon.svg");
+    --glpi-logo-light-reduced: url("../pics/logos/medequip-icon.svg");
+    --glpi-logo-dark-login: url("../pics/logos/medequip-login.svg");
+    --glpi-logo-light-login: url("../pics/logos/medequip-login.svg");
+}

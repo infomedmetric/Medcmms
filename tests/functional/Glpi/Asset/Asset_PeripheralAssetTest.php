@@ -1,0 +1,137 @@
+<?php
+
+/**
+ * ---------------------------------------------------------------------
+ *
+ * MedCMMS - Computerized Maintenance Management System
+ *
+ * https://github.com/infomedmetric/glpi
+ *
+ * @copyright 2015-2026 Teclib' and contributors.
+ * @licence   https://www.gnu.org/licenses/gpl-3.0.html
+ *
+ * ---------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of MedCMMS.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ * ---------------------------------------------------------------------
+ */
+
+namespace tests\units\Glpi\Asset;
+
+use Glpi\Asset\Asset_PeripheralAsset;
+use Glpi\Asset\Capacity;
+use Glpi\Asset\Capacity\HasPeripheralAssetsCapacity;
+use Glpi\Features\Clonable;
+use Glpi\Tests\DbTestCase;
+use Monitor;
+use Peripheral;
+use Toolbox;
+
+class Asset_PeripheralAssetTest extends DbTestCase
+{
+    public function testRelatedItemHasTab()
+    {
+        global $CFG_GLPI;
+
+        $this->initAssetDefinition(capacities: [new Capacity(name: HasPeripheralAssetsCapacity::class)]);
+
+        $this->login(); // tab will be available only if corresponding right is available in the current session
+
+        foreach ($CFG_GLPI['directconnect_types'] as $itemtype) {
+            $item = $this->createItem(
+                $itemtype,
+                $this->getMinimalCreationInput($itemtype)
+            );
+
+            $tabs = $item->defineAllTabs();
+            $this->assertArrayHasKey('Glpi\\Asset\\Asset_PeripheralAsset$1', $tabs, $itemtype);
+        }
+    }
+
+    public function testRelatedItemCloneRelations()
+    {
+        global $CFG_GLPI;
+
+        $this->initAssetDefinition(capacities: [new Capacity(name: HasPeripheralAssetsCapacity::class)]);
+
+        foreach ($CFG_GLPI['directconnect_types'] as $itemtype) {
+            if (!Toolbox::hasTrait($itemtype, Clonable::class)) {
+                continue;
+            }
+
+            $item = \getItemForItemtype($itemtype);
+            $this->assertContains(Asset_PeripheralAsset::class, $item->getCloneRelations(), $itemtype);
+        }
+    }
+
+    public function testUnglobalizeReturnsBoolean(): void
+    {
+        $monitor = $this->createItem(
+            Monitor::class,
+            [
+                'name' => 'Test Monitor',
+                'entities_id' => $this->getTestRootEntity(true),
+                'is_global' => 1,
+            ]
+        );
+
+        $result = $monitor->unglobalize();
+
+        $this->assertIsBool($result);
+        $this->assertTrue($result);
+    }
+
+    public function testDeletePeripheralDoesNotCallCleanRelationData(): void
+    {
+        $computer = $this->createItem(
+            \Computer::class,
+            [
+                'name'   => 'Le PC',
+                'serial' => 'qqzder45',
+                'entities_id' => 0,
+            ]
+        );
+
+        $periph = $this->createItem(
+            Peripheral::class,
+            [
+                'name' => 'La Souris',
+                'serial' => '12345',
+                'entities_id'  => 0,
+            ]
+        );
+
+        $relation = $this->createItem(
+            Asset_PeripheralAsset::class,
+            [
+                'itemtype_asset' => 'Computer',
+                'items_id_asset' => $computer->getID(),
+                'itemtype_peripheral' => 'Peripheral',
+                'items_id_peripheral' => $periph->getID(),
+            ]
+        );
+        $_SESSION['MESSAGE_AFTER_REDIRECT'] = [];
+
+        $this->assertTrue($periph->delete(['id' => $periph->getID()], force: true));
+
+        $this->assertTrue($_SESSION['MESSAGE_AFTER_REDIRECT'] === []);
+        $this->assertFalse((new Asset_PeripheralAsset())->getFromDB($relation->getID()));
+
+    }
+}
